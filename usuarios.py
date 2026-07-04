@@ -1,23 +1,33 @@
 # Bibliotecas Necessarias
 
 from time import sleep as sl
-import platform
-import os
+from rich.live import Live
+from rich.panel import Panel
+from rich import print
 import stdiomask
 import hashlib
+import platform
+import os
 import json
 
 # VariáVeis Principais
 
-usuarios = [] # Armazena (Email, Usuario, Senha) na variavel usuarios
+usuarios = []  # Armazena (Email, Usuario, Senha) na variavel usuarios
 
-local_arquivo = os.path.dirname(os.path.abspath(__file__)) # Localiza o script do programa
+exp_emails = ["gmail.com", "hotmail.com", "outlook.com"]
 
-arquivo_json = os.path.join(local_arquivo, "cadastros.json") # Banco de dados dos cadastrados
+local_arquivo = os.path.dirname(
+    os.path.abspath(__file__)
+)  # Localiza o script do programa
+
+arquivo_json = os.path.join(
+    local_arquivo, "cadastros.json"
+)  # Banco de dados dos cadastrados
 
 # Funções
 
-def limpar(): # Limpa o Terminal
+
+def limpar():  # Limpa o Terminal
 
     if platform.system() == "Windows":
         os.system("cls")
@@ -25,39 +35,55 @@ def limpar(): # Limpa o Terminal
     else:
         os.system("clear")
 
-def pausar(): # Pausa o terminal
-    return input('ENTER para continuar...')
 
-def loading(): # Barra de Loading similar ao usando no tqdm
+def pausar():  # Pausa o terminal
+    return input("ENTER para continuar...")
 
-    for n in range(101):
-        i = "■" * (n * 25 // 101)
-        print(f"\r{n}% {i}", end="", flush=True)
-        sl(0.01)
-    print()
 
-def titulo(text): # Retorta um Cabeçalho
+def loading():  # Barra de Loading similar ao usando no tqdm
+    with Live("", refresh_per_second=30) as live:
+        for n in range(101):
+            i = "■" * (n * 25 // 101)
+            if n < 33:
+                live.update(f"|{n}%|[red]{i}[/]")
 
-    linhas = "=" * 30
-    return f"{linhas}\n{text.center(len(linhas))}\n{linhas}"
+            else:
+                live.update(f"|{n}%|[yellow]{i}[/]")
 
-def encontrar_email(email): # Verifica se existe o email na lista de usuarios
+            sl(0.01)
+        live.update(f"|{n}%|[green]{i}[/]|")
+
+
+def cor_alerta(texto):
+    with Live("", refresh_per_second=20) as live:
+        cores = ["[rgb(85,0,0)]", "[rgb(170,0,0)]", "[rgb(255,0,0)]"]
+        vezes = 10
+        for i in range(vezes):
+            for cor in cores:
+                live.update(f"{cor}{texto}[/]")
+                sl(0.05)
+
+
+def encontrar_email(email):  # Verifica se existe o email na lista de usuarios
     for i, item in enumerate(usuarios):
         if item["Email"] == email:
             return i
     return -1
 
-def encontrar_usuario(usuario): # Verifica se existe o usuario na lista de usuarios
+
+def encontrar_usuario(usuario):  # Verifica se existe o usuario na lista de usuarios
     for i, item in enumerate(usuarios):
         if item["Usuario"] == usuario:
             return i
     return -1
 
-def criptografar_senha(senha): # Criptografa a senhas usando hash
+
+def criptografar_senha(senha):  # Criptografa a senhas usando hash
 
     return hashlib.sha256(senha.encode()).hexdigest()
 
-def carregar(): # Carrega os Dados dos usuarios cadastrados
+
+def carregar():  # Carrega os Dados dos usuarios cadastrados
 
     global usuarios
 
@@ -68,29 +94,40 @@ def carregar(): # Carrega os Dados dos usuarios cadastrados
     except FileNotFoundError:
         escrever()
 
-def escrever(): # Escreve/Atualiza dados dos usuarios cadastrados
+
+def escrever():  # Escreve/Atualiza dados dos usuarios cadastrados
 
     with open(arquivo_json, "w", encoding="utf-8") as arq:
         json.dump(usuarios, arq, indent=4, ensure_ascii=False)
 
-def main(): # Corpo Principal do Programa
-    while True:
-        print(titulo("XYZ CORP"))
-        print("|1| - Cadastrar\n|2| - Remover\n|3| - Logar\n|4| - Usuarios\n|0| - Sair")
 
+def menu():  # Menu Principal Interativo
+    print(
+        Panel(
+            """|[rgb(0,255,255)]1[/]| - [white]Cadastrar[/]\n|[rgb(0,255,255)]2[/]| - [white]Remover[/]\n|[rgb(0,255,255)]3[/]| - [white]Logar[/]\n|[rgb(0,255,255)]4[/]| - [white]Usuarios[/]\n|[red]0[/]| - [red]Sair[/]""",
+            title="[red]X[/][green]Y[/][blue bold]Z[/] [white]Corporation[/]",
+            style="rgb(210,180,120)",
+            width=30,
+        )
+    )
+
+    opcao = int(input("\nEscolha Uma Opcao: "))
+    return opcao
+
+
+def main():  # Corpo Principal do Programa
+    while True:
         try:
-            opc = int(input("\nEscolha Uma Opcao: "))
-            loading()
+            opc = menu()
             limpar()
 
             match opc:
-
                 case 1:
                     while True:
                         email = str(input("Digite Seu Email: ")).strip()
                         limpar()
 
-                        if not '@' in email or not '.com' in email:
+                        if not "@" in email or email not in exp_emails:
                             print("Email inválido!")
                             pausar()
                             limpar()
@@ -118,7 +155,9 @@ def main(): # Corpo Principal do Programa
                             else:
                                 break
 
-                        senha = str(input("Escolha uma Senha de no minimo 8 Caracteres: ")).strip()
+                        senha = str(
+                            input("Escolha uma Senha de no minimo 8 Caracteres: ")
+                        ).strip()
                         limpar()
 
                         if len(senha) < 8:
@@ -128,11 +167,13 @@ def main(): # Corpo Principal do Programa
                             continue
 
                         else:
-                            usuarios.append({
-                                "Email": email,
-                                "Usuario": usuario,
-                                "Senha": criptografar_senha(senha)
-                            })
+                            usuarios.append(
+                                {
+                                    "Email": email,
+                                    "Usuario": usuario,
+                                    "Senha": criptografar_senha(senha),
+                                }
+                            )
 
                             print("Cadastrando...")
                             loading()
@@ -145,16 +186,21 @@ def main(): # Corpo Principal do Programa
 
                 case 2:
                     login = str(input("Usuario: ")).strip()
-                    senha = stdiomask.getpass(prompt='Senha: ', mask='*')
+                    senha = stdiomask.getpass(prompt="Senha: ", mask="*")
                     limpar()
 
                     idx = encontrar_usuario(login)
 
-                    if idx != -1 and usuarios[idx]["Senha"] == criptografar_senha(senha):
-
-                        remover = input(
-                            "Tem certeza que deseja excluir a conta? ([S] || [N]): "
-                        ).strip().upper()
+                    if idx != -1 and usuarios[idx]["Senha"] == criptografar_senha(
+                        senha
+                    ):
+                        remover = (
+                            input(
+                                "Tem certeza que deseja excluir a conta? ([S] || [N]): "
+                            )
+                            .strip()
+                            .upper()
+                        )
                         limpar()
 
                         if remover == "S":
@@ -175,16 +221,18 @@ def main(): # Corpo Principal do Programa
 
                 case 3:
                     login = str(input("Usuario: ")).strip()
-                    senha = stdiomask.getpass(prompt='Senha: ', mask='*')
+                    senha = stdiomask.getpass(prompt="Senha: ", mask="*")
                     limpar()
 
                     idx = encontrar_usuario(login)
 
-                    if idx != -1 and usuarios[idx]["Senha"] == criptografar_senha(senha):
+                    if idx != -1 and usuarios[idx]["Senha"] == criptografar_senha(
+                        senha
+                    ):
                         print(f"Bem Vindo {login}!")
                         pausar()
                         limpar()
-                    
+
                     else:
                         print("Usuario ou Senha Invalida!")
                         pausar()
@@ -194,7 +242,9 @@ def main(): # Corpo Principal do Programa
 
                 case 4:
                     for i, item in enumerate(usuarios):
-                        print(f"|{i+1}| - Nick: {item['Usuario']} Email: {item['Email']}")
+                        print(
+                            f"|{i + 1}| - Nick: {item['Usuario']} Email: {item['Email']}"
+                        )
 
                     print()
                     pausar()
@@ -212,15 +262,17 @@ def main(): # Corpo Principal do Programa
                     pausar()
                     limpar()
 
-        except ValueError:
-            print("Digite Somente Numeros!")
+        except ValueError as erro:
+            cor_alerta(erro)
+            print(f"[cyan]Digite Somente Numeros![/]")
             pausar()
             limpar()
 
+
 # main
-print('Iniciando...')
+print("Iniciando...")
 loading()
-pausar()
+sl(1)
 limpar()
 carregar()
 main()
