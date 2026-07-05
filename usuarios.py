@@ -1,20 +1,26 @@
 # Bibliotecas Necessarias
 
-from time import sleep as sl
+# Terminal Detalhado ↓
 from rich.live import Live
 from rich.panel import Panel
+from rich.prompt import Prompt
 from rich import print
+
+# Temporizador para Pausa ↓
+from time import sleep as sl
+
+# Segurança de Senha ↓
 import stdiomask
 import hashlib
+
+# Interações com o Sistema ↓
 import platform
 import os
 import json
 
-# VariáVeis Principais
+# Variáveis Principais
 
 usuarios = []  # Armazena (Email, Usuario, Senha) na variavel usuarios
-
-exp_emails = ["gmail.com", "hotmail.com", "outlook.com"]
 
 local_arquivo = os.path.dirname(
     os.path.abspath(__file__)
@@ -37,7 +43,7 @@ def limpar():  # Limpa o Terminal
 
 
 def pausar():  # Pausa o terminal
-    return input("ENTER para continuar...")
+    return Prompt.ask("[cyan]ENTER[/] para continuar")
 
 
 def loading():  # Barra de Loading similar ao usando no tqdm
@@ -127,7 +133,11 @@ def main():  # Corpo Principal do Programa
                         email = str(input("Digite Seu Email: ")).strip()
                         limpar()
 
-                        if not "@" in email or email not in exp_emails:
+                        if (
+                            "@gmail.com" not in email
+                            and "@hotmail.com" not in email
+                            and "@outlook.com" not in email
+                        ):
                             print("Email inválido!")
                             pausar()
                             limpar()
@@ -146,6 +156,9 @@ def main():  # Corpo Principal do Programa
                             limpar()
 
                             indice = encontrar_usuario(usuario)
+                            if not usuario:
+                                limpar()
+                                continue
 
                             if indice != -1:
                                 print(f"O Usuario {usuario} ja esta Cadastrado!")
@@ -159,6 +172,9 @@ def main():  # Corpo Principal do Programa
                             input("Escolha uma Senha de no minimo 8 Caracteres: ")
                         ).strip()
                         limpar()
+
+                        if not senha:
+                            continue
 
                         if len(senha) < 8:
                             print(f"A senha {senha} e invalida!")
@@ -185,6 +201,12 @@ def main():  # Corpo Principal do Programa
                         break
 
                 case 2:
+                    if not usuarios:
+                        print("Lista de Cadastrados [red]Vazia![/]")
+                        pausar()
+                        limpar()
+                        continue
+
                     login = str(input("Usuario: ")).strip()
                     senha = stdiomask.getpass(prompt="Senha: ", mask="*")
                     limpar()
@@ -253,8 +275,13 @@ def main():  # Corpo Principal do Programa
 
                 case 0:
                     print("Saindo...")
-                    print("Ate Mais!")
-                    sl(2)
+
+                    with Live("", refresh_per_second=20) as live:
+                        tchau = [":hand:", ":wave:"]
+                        for v in range(3):
+                            for i in tchau:
+                                live.update(f"Ate Mais!{i}")
+                                sl(0.3)
                     break
 
                 case _:
@@ -264,12 +291,13 @@ def main():  # Corpo Principal do Programa
 
         except ValueError as erro:
             cor_alerta(erro)
-            print(f"[cyan]Digite Somente Numeros![/]")
+            print("[cyan]Digite Somente Numeros![/]")
             pausar()
             limpar()
 
 
 # main
+limpar()
 print("Iniciando...")
 loading()
 sl(1)
