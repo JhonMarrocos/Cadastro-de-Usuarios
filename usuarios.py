@@ -4,6 +4,8 @@
 from rich.live import Live
 from rich.panel import Panel
 from rich.prompt import Prompt
+from rich.table import Table
+from rich.console import Console
 from rich import print
 
 # Temporizador para Pausa ↓
@@ -42,8 +44,9 @@ def limpar():  # Limpa o Terminal
         os.system("clear")
 
 
-def pausar():  # Pausa o terminal
-    return Prompt.ask("[cyan]ENTER[/] para continuar")
+def continuar():  # Pausa o terminal ate que o usuário pressione ENTER
+    Prompt.ask("[cyan]ENTER[/] para continuar")
+    limpar()
 
 
 def loading():  # Barra de Loading similar ao usando no tqdm
@@ -51,20 +54,28 @@ def loading():  # Barra de Loading similar ao usando no tqdm
         for n in range(101):
             i = "■" * (n * 25 // 101)
             if n < 33:
-                live.update(f"|{n}%|[red]{i}[/]")
+                live.update(f"|{n}%|[[red]{i}[/]]")
 
             else:
-                live.update(f"|{n}%|[yellow]{i}[/]")
+                live.update(f"|{n}%|[[yellow]{i}[/]]")
 
             sl(0.01)
-        live.update(f"|{n}%|[green]{i}[/]|")
+        live.update(f"|{n}%|[[rgb(0,255,0)]{i}[/]]")
 
 
-def cor_alerta(texto):
+def cor_destaque(texto):  # Converte um Texto em uma msg em destaque piscando em verde
+    with Live("", refresh_per_second=20) as live:
+        cores = ["[rgb(0,85,0)]", "[rgb(0,170,0)]", "[rgb(0,255,0)]"]
+        for i in range(5):
+            for cor in cores:
+                live.update(f"{cor}{texto}[/]")
+                sl(0.1)
+
+
+def cor_alerta(texto):  # Converte um Texto em uma msg de alerta piscando em vermelho
     with Live("", refresh_per_second=20) as live:
         cores = ["[rgb(85,0,0)]", "[rgb(170,0,0)]", "[rgb(255,0,0)]"]
-        vezes = 10
-        for i in range(vezes):
+        for i in range(10):
             for cor in cores:
                 live.update(f"{cor}{texto}[/]")
                 sl(0.05)
@@ -121,186 +132,215 @@ def menu():  # Menu Principal Interativo
     return opcao
 
 
-def main():  # Corpo Principal do Programa
+def cadastrar():  # Opção [1] do menu (Cadastrar)
     while True:
-        try:
-            opc = menu()
+        email = str(input("Digite Seu Email: ")).strip()
+        limpar()
+
+        if (
+            "@gmail.com" not in email
+            and "@hotmail.com" not in email
+            and "@outlook.com" not in email
+        ):
+            print("Email inválido!")
+            continuar()
+            continue
+
+        indice = encontrar_email(email)
+
+        if indice != -1:
+            print(f"O Email {email} ja Existe!")
+            continuar()
+            continue
+
+        while True:
+            usuario = str(input("Digite um Nome de Usuario: ")).strip()
             limpar()
 
-            match opc:
-                case 1:
-                    while True:
-                        email = str(input("Digite Seu Email: ")).strip()
-                        limpar()
+            indice = encontrar_usuario(usuario)
+            if not usuario:
+                limpar()
+                continue
 
-                        if (
-                            "@gmail.com" not in email
-                            and "@hotmail.com" not in email
-                            and "@outlook.com" not in email
-                        ):
-                            print("Email inválido!")
-                            pausar()
-                            limpar()
-                            continue
+            if indice != -1:
+                print(f"O Usuario {usuario} ja esta Cadastrado!")
+                continuar()
 
-                        indice = encontrar_email(email)
+            else:
+                break
 
-                        if indice != -1:
-                            print(f"O Email {email} ja Existe!")
-                            pausar()
-                            limpar()
-                            continue
-
-                        while True:
-                            usuario = str(input("Digite um Nome de Usuario: ")).strip()
-                            limpar()
-
-                            indice = encontrar_usuario(usuario)
-                            if not usuario:
-                                limpar()
-                                continue
-
-                            if indice != -1:
-                                print(f"O Usuario {usuario} ja esta Cadastrado!")
-                                pausar()
-                                limpar()
-
-                            else:
-                                break
-
-                        senha = str(
-                            input("Escolha uma Senha de no minimo 8 Caracteres: ")
-                        ).strip()
-                        limpar()
-
-                        if not senha:
-                            continue
-
-                        if len(senha) < 8:
-                            print(f"A senha {senha} e invalida!")
-                            pausar()
-                            limpar()
-                            continue
-
-                        else:
-                            usuarios.append(
-                                {
-                                    "Email": email,
-                                    "Usuario": usuario,
-                                    "Senha": criptografar_senha(senha),
-                                }
-                            )
-
-                            print("Cadastrando...")
-                            loading()
-                            print("\nCadastro Realizado com Sucesso!")
-                            escrever()
-                            pausar()
-                            limpar()
-
-                        break
-
-                case 2:
-                    if not usuarios:
-                        print("Lista de Cadastrados [red]Vazia![/]")
-                        pausar()
-                        limpar()
-                        continue
-
-                    login = str(input("Usuario: ")).strip()
-                    senha = stdiomask.getpass(prompt="Senha: ", mask="*")
-                    limpar()
-
-                    idx = encontrar_usuario(login)
-
-                    if idx != -1 and usuarios[idx]["Senha"] == criptografar_senha(
-                        senha
-                    ):
-                        remover = (
-                            input(
-                                "Tem certeza que deseja excluir a conta? ([S] || [N]): "
-                            )
-                            .strip()
-                            .upper()
-                        )
-                        limpar()
-
-                        if remover == "S":
-                            usuarios.pop(idx)
-                            escrever()
-                            print("Usuário removido com sucesso!")
-                            pausar()
-                            limpar()
-
-                        elif remover == "N":
-                            print("Voltando ao menu...")
-                            loading()
-
-                    else:
-                        print("Usuario ou Senha Invalida!")
-                        pausar()
-                        limpar()
-
-                case 3:
-                    login = str(input("Usuario: ")).strip()
-                    senha = stdiomask.getpass(prompt="Senha: ", mask="*")
-                    limpar()
-
-                    idx = encontrar_usuario(login)
-
-                    if idx != -1 and usuarios[idx]["Senha"] == criptografar_senha(
-                        senha
-                    ):
-                        print(f"Bem Vindo {login}!")
-                        pausar()
-                        limpar()
-
-                    else:
-                        print("Usuario ou Senha Invalida!")
-                        pausar()
-                        limpar()
-
-                    continue
-
-                case 4:
-                    for i, item in enumerate(usuarios):
-                        print(
-                            f"|{i + 1}| - Nick: {item['Usuario']} Email: {item['Email']}"
-                        )
-
-                    print()
-                    pausar()
-                    limpar()
-                    continue
-
-                case 0:
-                    print("Saindo...")
-
-                    with Live("", refresh_per_second=20) as live:
-                        tchau = [":hand:", ":wave:"]
-                        for v in range(3):
-                            for i in tchau:
-                                live.update(f"Ate Mais!{i}")
-                                sl(0.3)
-                    break
-
-                case _:
-                    print("Opcao Invalida!")
-                    pausar()
-                    limpar()
-
-        except ValueError as erro:
-            cor_alerta(erro)
-            print("[cyan]Digite Somente Numeros![/]")
-            pausar()
+        while True:
+            senha = str(input("Escolha uma Senha de no minimo 8 Caracteres: ")).strip()
             limpar()
 
+            if not senha:
+                continue
 
-# main
+            if len(senha) < 8:
+                cor_alerta(f"[white]A senha[/] [green]{senha}[/] [white]e[/] invalida!")
+                continuar()
+                continue
+
+            else:
+                usuarios.append(
+                    {
+                        "Email": email,
+                        "Usuario": usuario,
+                        "Senha": criptografar_senha(senha),
+                    }
+                )
+
+                print("Cadastrando...")
+                loading()
+                print("[white]Cadastro Realizado com[/] [cyan]Sucesso[/]!")
+                escrever()
+                continuar()
+            break
+        break
+
+
+def remover():  # Opção [2] do menu (Remover)
+    if not usuarios:
+        cor_alerta("[white]Lista de Cadastrados[/] Vazia!")
+        continuar()
+        return
+
+    while True:
+        login = str(input("Usuario: ")).strip()
+        if not login:
+            limpar()
+            continue
+        break
+
+    senha = stdiomask.getpass(prompt="Senha: ", mask="*")
+    limpar()
+
+    idx = encontrar_usuario(login)
+
+    if idx != -1 and usuarios[idx]["Senha"] == criptografar_senha(senha):
+        remover = (
+            input("Tem certeza que deseja excluir a conta? ([S] || [N]): ")
+            .strip()
+            .upper()
+        )
+        limpar()
+
+        if remover == "S":
+            usuarios.pop(idx)
+            escrever()
+            cor_destaque(
+                f"[white]Usuário[/] {login} [white]removido com [cyan]sucesso[/][white]![/]"
+            )
+            continuar()
+        elif remover == "N":
+            print("Voltando ao menu...")
+            loading()
+
+    else:
+        print("Usuario ou Senha Invalida!")
+        continuar()
+
+
+def logar():  # Opção [3] do menu (Logar)
+    if not usuarios:
+        cor_alerta("[white]Lista de Cadastrados[/] Vazia!")
+        continuar()
+        return
+
+    while True:
+        login = str(input("Usuario: ")).strip()
+        if not login:
+            limpar()
+            continue
+        break
+
+    senha = stdiomask.getpass(prompt="Senha: ", mask="*")
+    limpar()
+
+    idx = encontrar_usuario(login)
+
+    if idx != -1 and usuarios[idx]["Senha"] == criptografar_senha(senha):
+        print(f"[cyan]Seja Bem Vindo[/]! [green]{login.upper()}[/]")
+        continuar()
+
+    else:
+        print("Usuario ou Senha Invalida!")
+        continuar()
+    return
+
+
+def cadastrados():  # opção [4] do menu (Usuarios)
+    if not usuarios:
+        cor_alerta("[white]Lista de Cadastrados[/] Vazia!")
+        continuar()
+        return
+
+    console = Console()
+    tabela = Table(title="[white]Usuarios[/]", style="rgb(210,180,120)")
+
+    tabela.add_column("[red]ID[/]", justify="center")
+    tabela.add_column("[green]Usuários[/]", justify="center")
+    tabela.add_column("[blue]Emails[/]", justify="center")
+
+    for i, item in enumerate(usuarios):
+        tabela.add_row(
+            f"[cyan]{i}[/]",
+            f"[white]{item['Usuario']}[/]",
+            f"[white]{item['Email']}[/]",
+        )
+
+    console.print(tabela)
+
+    print()
+    continuar()
+    return
+
+
+# main (corpo principal do programa)
+
 limpar()
 print("Iniciando...")
 loading()
 sl(1)
 limpar()
 carregar()
-main()
+
+while True:
+    try:
+        opc = menu()
+        limpar()
+
+        match opc:
+            case 1:
+                cadastrar()
+
+            case 2:
+                remover()
+
+            case 3:
+                logar()
+
+            case 4:
+                cadastrados()
+
+            case 0:  # Opção [0] do menu (Sair)
+                print("Saindo...")
+
+                with Live("", refresh_per_second=20) as live:
+                    tchau = [":hand:", ":wave:"]
+                    for v in range(3):
+                        for i in tchau:
+                            live.update(f"Ate Mais!{i}")
+                            sl(0.3)
+                break
+
+            case _:
+                cor_alerta(f"[white]A Opção[/] [cyan]{opc}[/] não existe!")
+                continuar()
+
+    except ValueError as erro:
+        limpar()
+        cor_alerta(
+            f"[cyan]Digite Somente uma das Opções Apresentadas![/]\n[yellow]Erro:[/] {erro}"
+        )
+        continuar()
