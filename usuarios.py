@@ -17,6 +17,7 @@ import hashlib
 
 # Interações com o Sistema ↓
 import platform
+import sys
 import os
 import json
 
@@ -24,12 +25,18 @@ import json
 
 usuarios = []  # Armazena (Email, Usuario, Senha) na variavel usuarios
 
-local_arquivo = os.path.dirname(
-    os.path.abspath(__file__)
-)  # Localiza o script do programa
+if getattr(sys, "frozen", False):
+    local_arquivo = os.path.dirname(
+        sys.executable
+    )  # Localiza o diretorio do programa se (execultavel)
+
+else:
+    local_arquivo = os.path.dirname(
+        os.path.abspath(__file__)
+    )  # Localiza o diretorio do programa se (srcipt)
 
 arquivo_json = os.path.join(
-    local_arquivo, "cadastros.json"
+    local_arquivo, "lista_de_cadastros.json"
 )  # Banco de dados dos cadastrados
 
 # Funções
