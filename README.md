@@ -1,63 +1,53 @@
-# Sistema de Cadastro de Usuários (CLI)
+# Sistema de Cadastro e Login (Terminal)
 
-Projeto feito em Python para praticar lógica de programação e manipulação de arquivos. É um sistema simples de terminal onde dá pra cadastrar usuário, fazer login, remover conta e ver a lista de quem já se cadastrou.
+Projeto feito em Python pra praticar lógica de programação, manipulação de arquivos e um pouco de UI no terminal usando a biblioteca `rich`.
 
-Fiz esse projeto estudando ADS na Estácio, como forma de praticar o que venho aprendendo.
+É basicamente um sistema de cadastro de usuários rodando no terminal, com senha criptografada e uma interface bem mais bonita do que o `input()` puro (com painéis, tabelas, barra de loading e mensagens coloridas piscando).
 
-## O que o programa faz
+## Funcionalidades
 
-- Cadastra usuário (email, nome de usuário e senha)
-- Faz login
-- Remove a conta (pede confirmação antes)
-- Mostra a lista de usuários cadastrados
-- Salva tudo em um arquivo JSON
-- A senha não fica salva "pura" no arquivo, ela passa por um hash (SHA-256) antes de salvar
+- **Cadastrar** – cria um novo usuário com email, nome de usuário e senha (valida email, usuário duplicado e tamanho mínimo da senha)
+- **Remover** – exclui um cadastro existente, pedindo confirmação antes
+- **Logar** – autentica um usuário já cadastrado
+- **Usuarios** – lista todos os cadastrados em uma tabela
 
-## Bibliotecas usadas
+Os dados ficam salvos em um arquivo `lista_de_cadastros.json`, então tudo persiste mesmo depois de fechar o programa.
 
-- hashlib (pra fazer o hash da senha)
-- json (pra salvar/ler os dados)
-- os (limpar o terminal)
-- time (pra fazer a barrinha de progresso)
-- stdiomask (pra esconder a senha digitada no terminal)
+## Como funciona por baixo dos panos
+
+- As senhas nunca são salvas em texto puro — uso `hashlib` (SHA-256) pra criptografar antes de gravar no JSON
+- A digitação da senha fica mascarada no terminal com `stdiomask`
+- O caminho do arquivo JSON é montado com `os.path`, então funciona tanto rodando o `.py` direto quanto rodando como executável (`.exe`)
+- A interface usa `rich` pra Live updates (barra de loading, textos piscando de alerta/destaque), painéis e tabelas
+- `match/case` pra controlar o menu principal
+
+## Tecnologias usadas
+
+- Python 3
+- [rich](https://github.com/Textualize/rich) – interface no terminal
+- [stdiomask](https://pypi.org/project/stdiomask/) – ocultar senha digitada
+- `hashlib`, `json`, `os`, `platform` – bibliotecas nativas do Python
 
 ## Como rodar
 
-Precisa instalar uma biblioteca que não é nativa do Python:
-
-```
-pip install stdiomask
-```
-
-Depois só rodar o arquivo:
-
-```
-python main.py
+```bash
+pip install rich stdiomask
+python nome_do_arquivo.py
 ```
 
-Obs: o caminho do arquivo json (variável `caminho`) tá fixo pro meu computador (Windows), então se for testar troca esse caminho pra um da sua máquina, ou só deixa `cadastros.json` mesmo (sem o caminho completo).
+### Gerar o executável (opcional)
 
-## Menu do programa
+Se quiser rodar sem precisar ter o Python instalado, dá pra gerar um `.exe` com o PyInstaller:
 
-```
-==============================
-          XYZ CORP
-==============================
-|1| - Cadastrar
-|2| - Remover
-|3| - Logar
-|4| - Usuarios
-|0| - Sair
+```bash
+pip install pyinstaller
+pyinstaller --onefile --name "nome do executavel" --icon=cad.ico usuarios.py
 ```
 
-## Coisas que sei que podem melhorar
+O executável vai ser gerado dentro da pasta `dist/`.
 
-- Trocar o caminho fixo do JSON por um caminho relativo
-- Colocar "salt" no hash da senha (mais seguro)
-- Talvez usar um banco de dados de verdade (SQLite) em vez de JSON
-- Validar o email de um jeito melhor (hoje só checa se tem "@" e ".com")
-- Separar o código em mais de um arquivo
+## Motivação
 
-## Autor
+Fiz esse projeto pra treinar conceitos que uso bastante no curso de ADS: autenticação, persistência de dados, tratamento de erros e organização de código em funções. Foi também minha primeira vez brincando de verdade com a lib `rich` pra deixar um projeto de terminal com uma cara mais profissional.
 
-Jhon - estudante de ADS, ainda aprendendo :)
+Ainda dá pra melhorar bastante coisa (tratamento de erros mais robusto, talvez migrar pra um banco de dados de verdade), mas o objetivo aqui foi mesmo praticar o básico com um projeto completo, do início ao fim.
