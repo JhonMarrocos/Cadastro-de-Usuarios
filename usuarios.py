@@ -39,6 +39,23 @@ arquivo_json = os.path.join(
     local_arquivo, "lista_de_cadastros.json"
 )  # Banco de dados dos cadastrados
 
+#region Caracteres para Senhas ↓
+
+minusculas = "abcdefghijklmnopqrstuvwxyz"
+maiusculas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+numeros = "0123456789"
+simbolos = '!@#$%^&*()-_=+[]{}|;:,.<>?/~'
+caracters = minusculas + maiusculas + numeros + simbolos
+
+#endregion
+
+#region Dominios de emails permitidos ↓
+
+dominios = ("@gmail.com", "@hotmail.com", "@outlook.com", "@yahoo.com")
+
+#endregion
+
+
 # Funções
 
 
@@ -107,6 +124,26 @@ def criptografar_senha(senha):  # Criptografa a senhas usando hash
     return hashlib.sha256(senha.encode()).hexdigest()
 
 
+def validar_senha_cadastro(senha): # Valida se a senha possui no minimo 8 caracteres, letras M e m, simbolos e números
+    if len(senha) < 8:
+        return False, "A senha deve ter no mínimo 8 caracteres."
+    
+    tem_minuscula = any(c in minusculas for c in senha)
+    tem_maiuscula = any(c in maiusculas for c in senha)
+    tem_numero = any(c in numeros for c in senha)
+    tem_simbolo = any(c in simbolos for c in senha)
+    
+    if not (tem_minuscula and tem_maiuscula and tem_numero and tem_simbolo):
+        limpar()
+        return False, "A senha deve conter letras maiúsculas, minúsculas, números e símbolos."
+    
+    for caractere in senha:
+        if caractere not in caracters:
+            return False, f"O caractere '{caractere}' não é permitido na senha."
+            
+    return True, "Senha válida! Cadastro concluído."
+
+
 def carregar():  # Carrega os Dados dos usuarios cadastrados
 
     global usuarios
@@ -141,22 +178,23 @@ def menu():  # Menu Principal Interativo
 
 def cadastrar():  # Opção [1] do menu (Cadastrar)
     while True:
-        email = str(input("Digite Seu Email: ")).strip()
+        email = str(input("Digite Seu Email: ")).strip().lower()
         limpar()
 
-        if (
-            "@gmail.com" not in email
-            and "@hotmail.com" not in email
-            and "@outlook.com" not in email
-        ):
-            print("Email inválido!")
-            continuar()
+        if not email:
             continue
+
+        tem_dominio = any(d in email for d in dominios)
+
+        if not tem_dominio:
+                cor_alerta("Email inválido! [white]Use apenas:[/] [green]@gmail.com, @hotmail.com, @outlook.com ou @yahoo.com[/]")
+                continuar()
+                continue
 
         indice = encontrar_email(email)
 
         if indice != -1:
-            print(f"O Email {email} ja Existe!")
+            cor_destaque(f"[white]O Email[/] [cyan]{email}[/] ja esta Cadastrado!")
             continuar()
             continue
 
@@ -164,27 +202,19 @@ def cadastrar():  # Opção [1] do menu (Cadastrar)
             usuario = str(input("Digite um Nome de Usuario: ")).strip()
             limpar()
 
-            indice = encontrar_usuario(usuario)
             if not usuario:
                 limpar()
                 continue
-
-            if indice != -1:
-                print(f"O Usuario {usuario} ja esta Cadastrado!")
-                continuar()
-
-            else:
-                break
+            break
 
         while True:
             senha = str(input("Escolha uma Senha de no minimo 8 Caracteres: ")).strip()
             limpar()
-
-            if not senha:
-                continue
-
-            if len(senha) < 8:
-                cor_alerta(f"[white]A senha[/] [green]{senha}[/] [white]e[/] invalida!")
+            
+            eh_valida, mensagem = validar_senha_cadastro(senha)
+            
+            if not eh_valida:
+                cor_alerta(f"Senha inválida: [green]{mensagem}[/]")
                 continuar()
                 continue
 
@@ -351,3 +381,4 @@ while True:
             f"[cyan]Digite Somente uma das Opções Apresentadas![/]\n[yellow]Erro:[/] {erro}"
         )
         continuar()
+limpar()
