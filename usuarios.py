@@ -134,7 +134,6 @@ def validar_senha_cadastro(senha): # Valida se a senha possui no minimo 8 caract
     tem_simbolo = any(c in simbolos for c in senha)
     
     if not (tem_minuscula and tem_maiuscula and tem_numero and tem_simbolo):
-        limpar()
         return False, "A senha deve conter letras maiúsculas, minúsculas, números e símbolos."
     
     for caractere in senha:
